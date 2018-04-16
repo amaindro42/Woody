@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/16 13:31:53 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/16 16:53:10 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,9 @@ char *elf_lookup_string(Elf64_Ehdr *header, int offset) {
 
 void	Elf64(void *ptr, size_t size)
 {
-	char		code[] = "\x89\x5e\x1f\xeb\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh";
-	//char		code[] = "\x00\x00\x00\x01\x";
+	//char		code[] = "\x89\x5e\x1f\xeb\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh";
+	//char		code[] = "\x90\xf8\x89\x48";
+	char		code[] = "\x89\x5e\x1f\xeb\x76";
 	size_t		code_size = strlen(code);
 	int			i;
 	Elf64_Ehdr	*header;
@@ -69,12 +70,19 @@ void	Elf64(void *ptr, size_t size)
 	tmp_entry = (void *)header->e_entry;
 
 	//Locate the text segment program header
+	i = 0;
 	while (i < header->e_phnum)
 	{
 		program = elf_program(header, i++);
+		printf("type = %d, flag = %d\n", program->p_type, program->p_flags);
+		if (program->p_flags & PF_X)
+			printf("PF_X\n");
+		if (program->p_flags & PF_W)
+			printf("PF_W\n");
+		if (program->p_flags & PF_R)
+			printf("PF_R\n");
 		if (program->p_type == PT_LOAD)
 			break ;
-		printf("type = %x, offset = %llu, size = %llu\n", program->p_type, program->p_offset, program->p_filesz);
 	}
 	tmp_size = program->p_offset + program->p_filesz;
 
