@@ -6,12 +6,14 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/05 14:21:15 by amaindro          #+#    #+#             */
-/*   Updated: 2018/04/05 14:25:19 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/17 13:40:09 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WOODY_H
 # define WOODY_H
+
+# define PAGE_SIZE 0x1000
 
 # include <sys/mman.h>
 # include <sys/stat.h>
