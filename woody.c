@@ -6,17 +6,11 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/17 14:18:55 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/17 16:08:00 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "woody.h"
-
-
-
-#include <string.h> //KILL MEEEEEEEEEEEEEEEEEEEEEEEE
-
-
 
 static inline	Elf64_Shdr *elf_sheader(Elf64_Ehdr *header) {
 		return (Elf64_Shdr *)((void*)header + header->e_shoff);
@@ -47,6 +41,15 @@ char			*elf_lookup_string(Elf64_Ehdr *header, int offset) {
 	return strtab + offset;
 }
 
+char			*create_opcode(char *str, size_t padding)
+{
+	char	*code;
+
+	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
+	ft_strcpy(code, str);
+	return (code);
+}
+
 void			update_segment_64(Elf64_Ehdr *header, Elf64_Off offset)
 {
 	Elf64_Phdr	*program;
@@ -72,19 +75,21 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	while (i < header->e_shnum)
 	{
 		section = elf_section(header, i++);
+		printf("name = %s\n", elf_lookup_string(header, section->sh_name));
 		if (section->sh_offset > offset)
 		{
+			printf("padding\n");
 			section->sh_offset += PAGE_SIZE;
 		}
+		else
+			printf("no padding\n");
 	}
 }
 
 void			Elf64(void *ptr, size_t size)
 {
-	char		code[] = "\x89\x5e\x1f\xeb\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh";
-	//char		code[] = "\x90\xf8\x89\x48";
-//	char		code[] = "\x89\x5e\x1f\xeb\x76";
-	size_t		code_size = strlen(code);
+	char		*code;
+	size_t		code_size;
 	int			i;
 	Elf64_Ehdr	*header;
 	Elf64_Phdr	*program;
@@ -94,6 +99,9 @@ void			Elf64(void *ptr, size_t size)
 	size_t		tmp_size;
 	size_t		padding_size;
 
+
+	code = create_opcode("\x89\x5e\x1f\xeb\x76", PAGE_SIZE);
+	code_size = ft_strlen(code);
 
 	header = ptr;
 
@@ -111,7 +119,6 @@ void			Elf64(void *ptr, size_t size)
 	}
 	tmp_size = program->p_offset + program->p_filesz;
 
-	padding_size = program->p_align;//A CHANGER PAS FIABLE
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
 	header->e_entry = program->p_vaddr + program->p_filesz;
 
@@ -135,8 +142,9 @@ void			Elf64(void *ptr, size_t size)
 	}
 
 	update_segment_64(header, program->p_offset);
-	update_section_64(header, program->p_offset);
+	update_section_64(header, section->sh_offset);
 	header->e_shoff += PAGE_SIZE;
+	printf("p_offset = %llu\nsh_offset = %llu\n", program->p_offset, section->sh_offset);
 
 	fd = open("woody2", O_WRONLY | O_APPEND | O_CREAT, 0777);
 	write(fd, ptr, tmp_size);
