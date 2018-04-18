@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/17 16:08:00 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/18 15:13:01 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ void			update_segment_64(Elf64_Ehdr *header, Elf64_Off offset)
 	while (i < header->e_phnum)
 	{
 		program = elf_program(header, i++);
-		if (program->p_offset > offset)
+		if (program->p_offset >= offset)
 		{
 			program->p_offset += PAGE_SIZE;
 		}
@@ -75,14 +75,10 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	while (i < header->e_shnum)
 	{
 		section = elf_section(header, i++);
-		printf("name = %s\n", elf_lookup_string(header, section->sh_name));
 		if (section->sh_offset > offset)
 		{
-			printf("padding\n");
 			section->sh_offset += PAGE_SIZE;
 		}
-		else
-			printf("no padding\n");
 	}
 }
 
@@ -90,7 +86,8 @@ void			Elf64(void *ptr, size_t size)
 {
 	char		*code;
 	size_t		code_size;
-	int			i;
+	int			i_p;
+	int			i_s;
 	Elf64_Ehdr	*header;
 	Elf64_Phdr	*program;
 	Elf64_Shdr	*section;
@@ -100,7 +97,7 @@ void			Elf64(void *ptr, size_t size)
 	size_t		padding_size;
 
 
-	code = create_opcode("\x89\x5e\x1f\xeb\x76", PAGE_SIZE);
+	code = create_opcode("\xb8\x42\x00\x00\x00", PAGE_SIZE);
 	code_size = ft_strlen(code);
 
 	header = ptr;
@@ -109,10 +106,10 @@ void			Elf64(void *ptr, size_t size)
 	tmp_entry = (void *)header->e_entry;
 
 	//Locate the text segment program header
-	i = 0;
-	while (i < header->e_phnum)
+	i_p = 0;
+	while (i_p < header->e_phnum)
 	{
-		program = elf_program(header, i++);
+		program = elf_program(header, i_p++);
 		printf("type = %d, flag = %d\noffset = %llu\n", program->p_type, program->p_flags, program->p_offset);
 		if (program->p_type == PT_LOAD && program->p_flags & PF_X)
 			break ;
@@ -128,23 +125,23 @@ void			Elf64(void *ptr, size_t size)
 	program->p_memsz += code_size;
 
 	//For the last shdr in the text segment
-	i = 0;
-	while (i < header->e_shnum)
+	i_s = 0;
+	while (i_s < header->e_shnum)
 	{
-		section = elf_section(header, i);
-		if (elf_section(header, i + 1)->sh_addr > header->e_entry)
+		section = elf_section(header, i_s);
+		if (elf_section(header, i_s + 1)->sh_addr > header->e_entry)
 		{
 	//increase sh_len by the parasite length
 			section->sh_size += code_size;
 			break ;
 		}
-		i++;
+		i_s++;
 	}
 
-	update_segment_64(header, program->p_offset);
+	update_segment_64(header, elf_program(header, i_p)->p_offset);
 	update_section_64(header, section->sh_offset);
 	header->e_shoff += PAGE_SIZE;
-	printf("p_offset = %llu\nsh_offset = %llu\n", program->p_offset, section->sh_offset);
+	printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
 	fd = open("woody2", O_WRONLY | O_APPEND | O_CREAT, 0777);
 	write(fd, ptr, tmp_size);
