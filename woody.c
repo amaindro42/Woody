@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/18 15:13:01 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/19 15:54:57 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,12 @@ char			*elf_lookup_string(Elf64_Ehdr *header, int offset) {
 	return strtab + offset;
 }
 
-char			*create_opcode(char *str, size_t padding)
+char			*create_opcode(char *str, size_t code_size, size_t padding)
 {
 	char	*code;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
-	ft_strcpy(code, str);
+	ft_strncpy(code, str, code_size);
 	return (code);
 }
 
@@ -92,18 +92,21 @@ void			Elf64(void *ptr, size_t size)
 	Elf64_Phdr	*program;
 	Elf64_Shdr	*section;
 	int			fd;
-	void		*tmp_entry;
+	Elf64_Addr	tmp_entry;
 	size_t		tmp_size;
 	size_t		padding_size;
 
+/*
+....WOODY....
+ */
 
-	code = create_opcode("\xb8\x42\x00\x00\x00", PAGE_SIZE);
-	code_size = ft_strlen(code);
+	code_size = 22;
+	code = create_opcode("\xb8\x04\x00\x00\x00\xbb\x01\x00\x00\x00\xba\x0e\x00\x00\x00\xcd\x80\xe9\x1e\xfd\xff\xff", code_size, PAGE_SIZE);
 
 	header = ptr;
 
 	//Patch the insertion code (parasite) to jump to the entry point (original)
-	tmp_entry = (void *)header->e_entry;
+	tmp_entry = header->e_entry;
 
 	//Locate the text segment program header
 	i_p = 0;
@@ -118,6 +121,8 @@ void			Elf64(void *ptr, size_t size)
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
 	header->e_entry = program->p_vaddr + program->p_filesz;
+
+	printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
 
 	//Increase p_filesz by account for the new code (parasite)
 	program->p_filesz += code_size;
