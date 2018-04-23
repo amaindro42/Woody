@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/20 15:26:02 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/23 17:17:44 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,13 +96,19 @@ void			Elf64(void *ptr, size_t size)
 	size_t		tmp_size;
 	size_t		padding_size;
 
-/*
-....WOODY....
-*/
-
-	code_size = 36;
-//	code = create_opcode("\x31\xc0\x31\xdb\x31\xd2\x31\xc9\x68\x42\x42\x42\x42\x59\xb8\x04\x00\x00\x00\xbb\x01\x00\x00\x00\xba\x0e\x00\x00\x00\xcd\x80\xe9\x10\xfd\xff\xff", code_size, PAGE_SIZE);
-	code = create_opcode("\x31\xc0\x31\xdb\x31\xd2\x31\xc9\x68\x42\x42\x42\x42\x59\xb8\x01\x00\x00\x00\xbb\x01\x00\x00\x00\xba\x0e\x00\x00\x00\x0f\x05\xe9\x10\xfd\xff\xff", code_size, PAGE_SIZE);
+	code_size = 57;
+	code = create_opcode("\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
+						"\x68\x59\x2e\x2e\x2e"
+						"\x68\x57\x4f\x4f\x44"
+						"\x68\x2e\x2e\x2e\x2e"
+						"\x48\x89\xe6" //mov rsi, rsp
+						"\x48\xc7\xc7\x01\x00\x00\x00" //mov rdi, 1
+						"\x48\xc7\xc0\x01\x00\x00\x00" //mov rax, 1
+						"\x48\xc7\xc2\x1c\x00\x00\x00" //mov rdx, 14
+						"\x0f\x05" //Syscall
+						"\x48\x33\xc0" //xor rax, rax
+						"\x48\x33\xd2" //xor rdx, rdx
+						"\xe9\xfb\xfc\xff\xff", code_size, PAGE_SIZE); //jump to main
 
 	header = ptr;
 
