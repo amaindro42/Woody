@@ -6,7 +6,7 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/05 14:21:15 by amaindro          #+#    #+#             */
-/*   Updated: 2018/04/24 13:11:30 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/24 13:18:17 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,13 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <stdio.h>
+# include <stdlib.h>
 # include "libft/libft.h"
 
 # include <stdint.h>
 
 
-void rc4(void *ptr);
+void rc4(char *ptr, int size);
 
 /* Type for a 16-bit quantity.  */
 typedef uint16_t Elf32_Half;

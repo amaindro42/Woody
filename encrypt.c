@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/23 17:19:00 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/24 13:18:40 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,16 +53,28 @@ void	rumble_bits(char *key, char *ptr, int *tab,int size)
 		j = 0;
 	}
 	g = size - i;
-	ft_printf("size restante : %d\n", g);
+	printf("size restante : %d, size : %d\n", g, size);
 //	while (i < size)
 //	{
 		//fill ptr avec des 0 pour etre multiple de 256
 //	}
-	ft_printf("test : \n");
+	printf("test : \n");
+	i = 0;
+	j = 0;
+	while (i + 256 < size)
+	{
+		while (j < 256 && i + 256 < size)
+		{
+			ptr[i] = ptr[i] ^ key[j];
+			i++;
+			j++;
+		}
+		j = 0;
+	}
 	i = 0;
 	while (i < size)
 	{
-		ft_printf("%c", ptr[i]);
+		printf("%c", ptr[i]);
 		i++;
 	}
 }
@@ -96,7 +108,7 @@ void	key_schedule(char *key, void *ptr , int size)
 	{
 		if (j == tab[i])
 		{
-//			ft_printf("tab[%d] : %d\n", i, tab[i]);
+//			printf("tab[%d] : %d\n", i, tab[i]);
 			j++;
 			i = -1;
 		}
@@ -123,11 +135,11 @@ char	*create_key(void *tmp ,int size2)
 	if ((fd = open("/dev/random", O_RDONLY)) < 0)
 		exitstr("/dev/random dont open\n");
 	size = read(fd, ptr, sizeof(ptr));
-	ft_printf("Key : ");
+	printf("Key : ");
 	while (i < 256)
 	{
 		key[i] = ptr[i] % 93 + 33;
-		ft_printf("%c", key[i]);
+		printf("%c", key[i]);
 		i++;
 	}
 	ft_putchar('\n');
@@ -142,7 +154,7 @@ void	rc4(char *ptr, int size)
 	i = 0;
 	while (i < size)
 	{
-		ft_printf("%c", ptr[i]);
+		printf("%c", ptr[i]);
 		i++;
 	}
 	key = create_key(ptr, size);
