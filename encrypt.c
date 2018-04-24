@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/24 13:18:40 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/24 17:05:35 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,49 +27,65 @@ void	exitstr(char *str)
 		    échanger(S[i], S[j])
 	finpour*/
 
-void	rumble_bits(char *key, char *ptr, int *tab,int size)
+void	rumble_bits(char *key, char *ptr, int tab[256],int size)
 {
 	char tmp;
 	int i;
 	int j;
 	int p;
-	int g;
 
-	g = 0;
-	p = 0;
-	j = 0;
 	i = 0;
-	while (i + 256 < size)
+	while (i < size)
 	{
-		while (j < 256 && i + 256 < size)
+		j = 0;
+		while (j < 256 && i  < size)
 		{
-			tmp = ptr[(tab[j]) * p];
-			ptr[(tab[j]) * p] = ptr[(j * p)];
-			ptr[(j * p)] = tmp;
+			tmp = ptr[(tab[j]) + i - j];
+			ptr[(tab[j]) + i - j] = ptr[i];
+			ptr[i] = tmp;
 			j++;
 			i++;
 		}
-		p++;
-		j = 0;
 	}
-	g = size - i;
-	printf("size restante : %d, size : %d\n", g, size);
-//	while (i < size)
-//	{
-		//fill ptr avec des 0 pour etre multiple de 256
-//	}
-	printf("test : \n");
+	printf("\n___________________________________________________________________________________________\n\n");
 	i = 0;
-	j = 0;
-	while (i + 256 < size)
+	while (i < size)
 	{
-		while (j < 256 && i + 256 < size)
+		j = 0;
+		while (j < 256 && i < size)
 		{
+//			printf("compare : %c ^ %c", ptr[i], key[j]);
 			ptr[i] = ptr[i] ^ key[j];
+//			printf(" = %c\n", ptr[i]);
 			i++;
 			j++;
 		}
+	}
+	i = 0;
+	while (i < size)
+	{
 		j = 0;
+		while (j < 256 && i < size)
+		{
+//			printf("compare : %c ^ %c", ptr[i], key[j]);
+			ptr[i] = ptr[i] ^ key[j];
+//			printf(" = %c\n", ptr[i]);
+			i++;
+			j++;
+		}
+	}
+	i = size - 1;
+	while (i >= 0)
+	{
+		j = 255;
+		while (j >= 0 && i >= 0)
+		{
+			tmp = ptr[(tab[j]) + i - j];
+			ptr[(tab[j]) + i - j] = ptr[i];
+			ptr[i] = tmp;
+			j--;
+			i--;
+		}
 	}
 	i = 0;
 	while (i < size)
@@ -120,30 +136,45 @@ void	key_schedule(char *key, void *ptr , int size)
 }
 
 
-char	*create_key(void *tmp ,int size2)
+char	*create_key(char *tmp ,int size_file)
 {
 	int fd;
-	ssize_t size;
+	ssize_t size_key;
 	char *key;
 	unsigned char ptr[256];
 	int i;
 	int i2;
+	int global_size;
+	char *tmp2;
 
 	i2 = 0;
 	i = 0;
 	key = malloc(sizeof(256));
 	if ((fd = open("/dev/random", O_RDONLY)) < 0)
 		exitstr("/dev/random dont open\n");
-	size = read(fd, ptr, sizeof(ptr));
-	printf("Key : ");
+	size_key = read(fd, ptr, sizeof(ptr));
+	global_size = (size_file % 256 == 0) ? size_file : (size_file / 256 + 1) * 256;
+	tmp2 = malloc(global_size);
+	while (i < size_file)
+	{
+		tmp2[i] = tmp[i];
+		i++;
+	}
+	while (i < global_size)
+	{
+		tmp2[i] = 0;
+		i++;
+	}
+	i = 0;
+//	printf("Key : ");
 	while (i < 256)
 	{
 		key[i] = ptr[i] % 93 + 33;
-		printf("%c", key[i]);
+//		printf("%c", key[i]);
 		i++;
 	}
 	ft_putchar('\n');
-	key_schedule(key, tmp, size2);
+	key_schedule(key, tmp2, global_size);
 	return (key);
 }
 
@@ -152,10 +183,12 @@ void	rc4(char *ptr, int size)
 	char *key;
 	int i;
 	i = 0;
+	printf("\n");
 	while (i < size)
 	{
 		printf("%c", ptr[i]);
 		i++;
 	}
+	printf("hey2\n");
 	key = create_key(ptr, size);
 }
