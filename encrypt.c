@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/24 17:05:35 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/24 17:07:46 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ void	rumble_bits(char *key, char *ptr, int tab[256],int size)
 	int p;
 
 	i = 0;
+//encrypt :
 	while (i < size)
 	{
 		j = 0;
@@ -61,6 +62,7 @@ void	rumble_bits(char *key, char *ptr, int tab[256],int size)
 			j++;
 		}
 	}
+// reverse encrypt 
 	i = 0;
 	while (i < size)
 	{
