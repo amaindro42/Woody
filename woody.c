@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/24 13:16:23 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/24 15:44:30 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,16 @@ char			*elf_lookup_string(Elf64_Ehdr *header, int offset) {
 	return strtab + offset;
 }
 
-char			*create_opcode(char *str, size_t code_size, size_t padding)
+char			*create_opcode(char *str, Elf64_Word jump, size_t code_size, size_t padding)
 {
 	char	*code;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
 	ft_strncpy(code, str, code_size);
+	code[code_size] = (char)jump;
+	code[code_size + 1] = (char)(jump >> 8);
+	code[code_size + 2] = (char)(jump >> 16);
+	code[code_size + 3] = (char)(jump >> 24);
 	return (code);
 }
 
@@ -96,20 +100,6 @@ void			Elf64(void *ptr, size_t size)
 	size_t		tmp_size;
 	size_t		padding_size;
 
-	code_size = 57;
-	code = create_opcode("\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
-						"\x68\x59\x2e\x2e\x2e"
-						"\x68\x57\x4f\x4f\x44"
-						"\x68\x2e\x2e\x2e\x2e"
-						"\x48\x89\xe6" //mov rsi, rsp
-						"\x48\xc7\xc7\x01\x00\x00\x00" //mov rdi, 1
-						"\x48\xc7\xc0\x01\x00\x00\x00" //mov rax, 1
-						"\x48\xc7\xc2\x1c\x00\x00\x00" //mov rdx, 14
-						"\x0f\x05" //Syscall
-						"\x48\x33\xc0" //xor rax, rax
-						"\x48\x33\xd2" //xor rdx, rdx
-						"\xe9\xfb\xfc\xff\xff", code_size, PAGE_SIZE); //jump to main
-
 	header = ptr;
 
 	//Patch the insertion code (parasite) to jump to the entry point (original)
@@ -130,6 +120,26 @@ void			Elf64(void *ptr, size_t size)
 	header->e_entry = program->p_vaddr + program->p_filesz;
 
 	printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
+
+	code_size = 67;
+	code = create_opcode("\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
+						"\x68\x59\x2e\x2e\x2e"
+						"\x68\x57\x4f\x4f\x44"
+						"\x68\x2e\x2e\x2e\x2e"
+						"\x48\x89\xe6" //mov rsi, rsp
+						"\x48\xc7\xc7\x01\x00\x00\x00" //mov rdi, 1
+						"\x48\xc7\xc0\x01\x00\x00\x00" //mov rax, 1
+						"\x48\xc7\xc2\x1c\x00\x00\x00" //mov rdx, 14
+						"\x0f\x05" //Syscall
+						"\x48\x33\xf6" //xor rsi, rsi
+						"\x48\x33\xff" //xor rdi, rdi
+						"\x58" // pop rax
+						"\x58" // pop rax
+						"\x58" // pop rax
+						"\x58" // pop rax
+						"\x48\x33\xc0" //xor rax, rax
+						"\x48\x33\xd2" //xor rdx, rdx
+						"\xe9", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff, code_size - 4, PAGE_SIZE); //jump to main
 
 	//Increase p_filesz by account for the new code (parasite)
 	program->p_filesz += code_size;
@@ -170,7 +180,7 @@ void			magic_number(void *ptr, size_t size, char *file_name)
 	if (*(int *)ptr == *(int *)ELFMAG && test[EI_CLASS] == ELFCLASS64)
 	{
 		Elf64(ptr, size);
-		rc4(ptr, size);
+		//rc4(ptr, size);
 	}
 	else
 		printf("Wrong file signature\n");

@@ -6,7 +6,7 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/11/27 19:05:22 by amaindro          #+#    #+#             */
-/*   Updated: 2015/12/11 16:26:26 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/24 14:33:00 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,11 +67,9 @@ static size_t		ft_len(const char *s, char c, unsigned int i)
 char				**ft_strsplit(const char *s, char c)
 {
 	int		i;
-	int		j;
 	char	**tab;
 
 	i = 0;
-	j = 0;
 	tab = (char**)malloc(sizeof(char*) * (ft_countword(s, c) + 1));
 	if (!tab)
 		return (0);
