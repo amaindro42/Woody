@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/24 17:05:31 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/25 11:21:13 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,19 +86,19 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-void			Elf64(void *ptr, size_t size)
+char			*Elf64(void *ptr, size_t size, size_t *final_size)
 {
 	char		*code;
-	size_t		code_size;
+	char		*str;
 	int			i_p;
 	int			i_s;
+	size_t		code_size;
+	size_t		tmp_size;
+	size_t		padding_size;
 	Elf64_Ehdr	*header;
 	Elf64_Phdr	*program;
 	Elf64_Shdr	*section;
-	int			fd;
 	Elf64_Addr	tmp_entry;
-	size_t		tmp_size;
-	size_t		padding_size;
 
 	header = ptr;
 
@@ -165,22 +165,25 @@ void			Elf64(void *ptr, size_t size)
 	header->e_shoff += PAGE_SIZE;
 	printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
-	fd = open("woody2", O_WRONLY | O_APPEND | O_CREAT, 0777);
-	write(fd, ptr, tmp_size);
+	str = ft_memalloc(size + PAGE_SIZE);
+	ft_strncpy(str, ptr, tmp_size);
 	//Physically insert the new code (parasite) and pad to PAGE_SIZE, into the file - text segment p_offset + p_filesz (original)
-	write(fd, code, PAGE_SIZE);
-	write(fd, ptr + tmp_size, size - tmp_size);
+	ft_strncpy(str + tmp_size, code, PAGE_SIZE);
+	ft_strncpy(str + tmp_size + PAGE_SIZE, ptr + tmp_size, size - tmp_size);
+	*final_size = size + PAGE_SIZE;
+	return (str);
 }
 
 void			magic_number(void *ptr, size_t size, char *file_name)
 {
-	char *test;
+	char		*test;
+	size_t		final_size;
 
 	test = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && test[EI_CLASS] == ELFCLASS64)
 	{
-		Elf64(ptr, size);
-		rc4("At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.", 844);
+		test = Elf64(ptr, size, &final_size);
+		rc4(test, final_size);
 	}
 	else
 		printf("Wrong file signature\n");
