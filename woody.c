@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/26 15:08:16 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/26 17:16:01 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,8 +186,7 @@ void			magic_number(void *ptr, size_t size, char *file_name)
 	str = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && str[EI_CLASS] == ELFCLASS64)
 	{
-		str = Elf64(ptr, size, &total_size, &crypt, &crypt_size);
-		rc4(str, total_size, crypt, crypt_size);
+		rc4(str, total_size);
 	}
 	else
 		printf("Wrong file signature\n");

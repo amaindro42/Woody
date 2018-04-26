@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/24 17:07:46 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/26 17:16:03 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void	exitstr(char *str)
 		    échanger(S[i], S[j])
 	finpour*/
 
-void	rumble_bits(char *key, char *ptr, int tab[256],int size)
+void	rumble_bits(char *key, char *ptr, int tab[256], size_t size)
 {
 	char tmp;
 	int i;
@@ -62,6 +62,13 @@ void	rumble_bits(char *key, char *ptr, int tab[256],int size)
 			j++;
 		}
 	}
+	i = 0;
+	while (i < size)
+	{
+		printf("%c", ptr[i]);
+		i++;
+	}
+	printf("\n___________________________________________________________________________________________\n\n");
 // reverse encrypt 
 	i = 0;
 	while (i < size)
@@ -97,7 +104,7 @@ void	rumble_bits(char *key, char *ptr, int tab[256],int size)
 	}
 }
 
-void	key_schedule(char *key, void *ptr , int size)
+void	key_schedule(char *key, void *ptr, size_t size)
 {
 	int i;
 	int j;
@@ -138,35 +145,22 @@ void	key_schedule(char *key, void *ptr , int size)
 }
 
 
-char	*create_key(char *tmp ,int size_file)
+char	*create_key(char *str, size_t size_file)
 {
-	int fd;
-	ssize_t size_key;
-	char *key;
-	unsigned char ptr[256];
-	int i;
-	int i2;
-	int global_size;
-	char *tmp2;
+	int				fd;
+	int				i;
+	ssize_t			size_key;
+	size_t			global_size;
+	size_t			crypt_size;
+	unsigned char	ptr[256];
+	char			*key;
+	char			*tmp2;
+	char			*crypt;
 
-	i2 = 0;
-	i = 0;
 	key = malloc(sizeof(256));
 	if ((fd = open("/dev/random", O_RDONLY)) < 0)
 		exitstr("/dev/random dont open\n");
 	size_key = read(fd, ptr, sizeof(ptr));
-	global_size = (size_file % 256 == 0) ? size_file : (size_file / 256 + 1) * 256;
-	tmp2 = malloc(global_size);
-	while (i < size_file)
-	{
-		tmp2[i] = tmp[i];
-		i++;
-	}
-	while (i < global_size)
-	{
-		tmp2[i] = 0;
-		i++;
-	}
 	i = 0;
 //	printf("Key : ");
 	while (i < 256)
@@ -175,12 +169,26 @@ char	*create_key(char *tmp ,int size_file)
 //		printf("%c", key[i]);
 		i++;
 	}
+	str = Elf64(str, size_file, &size_file, &crypt, &crypt_size);
+	global_size = (size_file % 256 == 0) ? size_file : (size_file / 256 + 1) * 256;
+	tmp2 = malloc(global_size);
+	i = 0;
+	while (i < size_file)
+	{
+		tmp2[i] = str[i];
+		i++;
+	}
+	while (i < global_size)
+	{
+		tmp2[i] = 0;
+		i++;
+	}
 	ft_putchar('\n');
 	key_schedule(key, tmp2, global_size);
 	return (key);
 }
 
-void	rc4(char *ptr, int size)
+void	rc4(char *ptr, size_t size)
 {
 	char *key;
 	int i;
