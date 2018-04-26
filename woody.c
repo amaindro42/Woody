@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/25 11:21:13 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/26 15:08:16 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-char			*Elf64(void *ptr, size_t size, size_t *final_size)
+char			*Elf64(void *ptr, size_t size, size_t *final_size, char **crypt, size_t *crypt_size)
 {
 	char		*code;
 	char		*str;
@@ -115,6 +115,8 @@ char			*Elf64(void *ptr, size_t size, size_t *final_size)
 			break ;
 	}
 	tmp_size = program->p_offset + program->p_filesz;
+	*crypt = str + program->p_offset;
+	*crypt_size = program->p_filesz;
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
 	header->e_entry = program->p_vaddr + program->p_filesz;
@@ -176,14 +178,16 @@ char			*Elf64(void *ptr, size_t size, size_t *final_size)
 
 void			magic_number(void *ptr, size_t size, char *file_name)
 {
-	char		*test;
-	size_t		final_size;
+	char		*str;
+	char		*crypt;
+	size_t		total_size;
+	size_t		crypt_size;
 
-	test = ptr;
-	if (*(int *)ptr == *(int *)ELFMAG && test[EI_CLASS] == ELFCLASS64)
+	str = ptr;
+	if (*(int *)ptr == *(int *)ELFMAG && str[EI_CLASS] == ELFCLASS64)
 	{
-		test = Elf64(ptr, size, &final_size);
-		rc4(test, final_size);
+		str = Elf64(ptr, size, &total_size, &crypt, &crypt_size);
+		rc4(str, total_size, crypt, crypt_size);
 	}
 	else
 		printf("Wrong file signature\n");

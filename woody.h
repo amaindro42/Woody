@@ -6,7 +6,7 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/05 14:21:15 by amaindro          #+#    #+#             */
-/*   Updated: 2018/04/24 13:18:17 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/26 15:08:13 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 # include <stdint.h>
 
 
-void rc4(char *ptr, int size);
+void rc4(char *ptr, size_t size, char *crypt, size_t crypt_size);
 
 /* Type for a 16-bit quantity.  */
 typedef uint16_t Elf32_Half;
