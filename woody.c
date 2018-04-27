@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/26 17:16:01 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/27 14:25:02 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-char			*Elf64(void *ptr, size_t size, size_t *final_size, char **crypt, size_t *crypt_size)
+char			*Elf64(void *ptr, size_t *size, char **crypt, size_t *crypt_size)
 {
 	char		*code;
 	char		*str;
@@ -167,26 +167,23 @@ char			*Elf64(void *ptr, size_t size, size_t *final_size, char **crypt, size_t *
 	header->e_shoff += PAGE_SIZE;
 	printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
-	str = ft_memalloc(size + PAGE_SIZE);
+	str = ft_memalloc(*size + PAGE_SIZE);
 	ft_strncpy(str, ptr, tmp_size);
 	//Physically insert the new code (parasite) and pad to PAGE_SIZE, into the file - text segment p_offset + p_filesz (original)
 	ft_strncpy(str + tmp_size, code, PAGE_SIZE);
-	ft_strncpy(str + tmp_size + PAGE_SIZE, ptr + tmp_size, size - tmp_size);
-	*final_size = size + PAGE_SIZE;
+	ft_strncpy(str + tmp_size + PAGE_SIZE, ptr + tmp_size, *size - tmp_size);
+	*size += PAGE_SIZE;
 	return (str);
 }
 
 void			magic_number(void *ptr, size_t size, char *file_name)
 {
 	char		*str;
-	char		*crypt;
-	size_t		total_size;
-	size_t		crypt_size;
 
 	str = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && str[EI_CLASS] == ELFCLASS64)
 	{
-		rc4(str, total_size);
+		rc4(str, size);
 	}
 	else
 		printf("Wrong file signature\n");
