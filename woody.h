@@ -6,7 +6,7 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/05 14:21:15 by amaindro          #+#    #+#             */
-/*   Updated: 2018/04/27 15:41:18 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/27 16:33:16 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 
 
 void rc4(char *ptr, size_t size);
-char *Elf64(void *ptr, size_t *size, char *key, char **crypt, size_t *crypt_size);
+char *Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *crypt_size);
 
 /* Type for a 16-bit quantity.  */
 typedef uint16_t Elf32_Half;

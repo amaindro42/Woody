@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/27 15:39:30 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/27 16:50:37 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void	exitstr(char *str)
 		    échanger(S[i], S[j])
 	finpour*/
 
-void	rumble_bits(char *key, char *ptr, int tab[256], size_t size)
+void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_file, char *str)
 {
 	char tmp;
 	int i;
@@ -41,8 +41,11 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size)
 		j = 0;
 		while (j < 256 && i  < size)
 		{
+//			printf("mdr : size : %lu, tab[j]: %d, i : %d, j : %d\n", size, tab[j], i , j);
 			tmp = ptr[(tab[j]) + i - j];
+//			printf("mdr2\n");
 			ptr[(tab[j]) + i - j] = ptr[i];
+//			printf("mdr3\n");
 			ptr[i] = tmp;
 			j++;
 			i++;
@@ -63,9 +66,9 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size)
 		}
 	}
 	i = 0;
-	while (i < size)
+	while (i < size_file)
 	{
-		printf("%c", ptr[i]);
+		printf("%c", str[i]);
 		i++;
 	}
 	printf("\n___________________________________________________________________________________________\n\n");
@@ -97,14 +100,14 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size)
 		}
 	}
 	i = 0;
-	while (i < size)
+	while (i < size_file)
 	{
-		printf("%c", ptr[i]);
+		printf("%c", str[i]);
 		i++;
 	}
 }
 
-void	key_schedule(char *key, void *ptr, size_t size)
+void	key_schedule(char *key, void *ptr, size_t size, size_t size_file, void *str)
 {
 	int i;
 	int j;
@@ -141,7 +144,7 @@ void	key_schedule(char *key, void *ptr, size_t size)
 //		if ( i == 256 && j != 256)
 //			i = 0;
 	}
-	rumble_bits(key, ptr, tab, size);
+	rumble_bits(key, ptr, tab, size, size_file, str);
 }
 
 
@@ -152,6 +155,7 @@ char	*create_key(char *str, size_t size_file)
 	ssize_t			size_key;
 	size_t			global_size;
 	size_t			crypt_size;
+	size_t			crypt_offset;
 	unsigned char	ptr[256];
 	char			*key;
 	char			*tmp2;
@@ -169,10 +173,12 @@ char	*create_key(char *str, size_t size_file)
 //		printf("%c", key[i]);
 		i++;
 	}
-	str = Elf64(str, &size_file, key, &crypt, &crypt_size);
-	global_size = (size_file % 256 == 0) ? size_file : (size_file / 256 + 1) * 256;
+	str = Elf64(str, &size_file, key, &crypt_offset, &crypt_size);
+	crypt = str + crypt_offset;
+	printf("str = %p, crypt = %p\n", str, crypt);
+	global_size = (crypt_size % 256 == 0) ? crypt_size : (crypt_size / 256 + 1) * 256;
 	tmp2 = malloc(global_size);
-	i = 0;
+/*	i = 0;
 	while (i < size_file)
 	{
 		tmp2[i] = str[i];
@@ -182,9 +188,9 @@ char	*create_key(char *str, size_t size_file)
 	{
 		tmp2[i] = 0;
 		i++;
-	}
+	}*/
 	ft_putchar('\n');
-	key_schedule(key, tmp2, global_size);
+	key_schedule(key, crypt, global_size, size_file, str);
 	return (key);
 }
 

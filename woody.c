@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/27 15:53:13 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/27 16:50:39 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-char			*Elf64(void *ptr, size_t *size, char *key, char **crypt, size_t *crypt_size)
+char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *crypt_size)
 {
 	char		*code;
 	char		*str;
@@ -115,7 +115,7 @@ char			*Elf64(void *ptr, size_t *size, char *key, char **crypt, size_t *crypt_si
 			break ;
 	}
 	tmp_size = program->p_offset + program->p_filesz;
-	*crypt = str + program->p_offset;
+	*crypt_offset = program->p_offset;
 	*crypt_size = program->p_filesz;
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
