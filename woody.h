@@ -6,7 +6,7 @@
 /*   By: amaindro <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/05 14:21:15 by amaindro          #+#    #+#             */
-/*   Updated: 2018/04/26 16:46:08 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/27 15:41:18 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define WOODY_H
 
 # define PAGE_SIZE 0x1000
+# define KEY_SIZE 256
 
 # include <sys/mman.h>
 # include <sys/stat.h>
@@ -27,7 +28,7 @@
 
 
 void rc4(char *ptr, size_t size);
-char *Elf64(void *ptr, size_t size, size_t *final_size, char **crypt, size_t *crypt_size);
+char *Elf64(void *ptr, size_t *size, char *key, char **crypt, size_t *crypt_size);
 
 /* Type for a 16-bit quantity.  */
 typedef uint16_t Elf32_Half;

@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/26 17:16:03 by droly            ###   ########.fr       */
+/*   Updated: 2018/04/27 15:39:30 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,7 +157,7 @@ char	*create_key(char *str, size_t size_file)
 	char			*tmp2;
 	char			*crypt;
 
-	key = malloc(sizeof(256));
+	key = ft_memalloc(sizeof(char) * 256);
 	if ((fd = open("/dev/random", O_RDONLY)) < 0)
 		exitstr("/dev/random dont open\n");
 	size_key = read(fd, ptr, sizeof(ptr));
@@ -169,7 +169,7 @@ char	*create_key(char *str, size_t size_file)
 //		printf("%c", key[i]);
 		i++;
 	}
-	str = Elf64(str, size_file, &size_file, &crypt, &crypt_size);
+	str = Elf64(str, &size_file, key, &crypt, &crypt_size);
 	global_size = (size_file % 256 == 0) ? size_file : (size_file / 256 + 1) * 256;
 	tmp2 = malloc(global_size);
 	i = 0;

@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/27 14:25:02 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/04/27 15:53:13 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ char			*create_opcode(char *str, Elf64_Word jump, size_t code_size, size_t paddi
 	char	*code;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
-	ft_strncpy(code, str, code_size);
+	ft_strncpy(code + KEY_SIZE, str, code_size);
 	code[code_size] = (char)jump;
 	code[code_size + 1] = (char)(jump >> 8);
 	code[code_size + 2] = (char)(jump >> 16);
@@ -86,7 +86,7 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-char			*Elf64(void *ptr, size_t *size, char **crypt, size_t *crypt_size)
+char			*Elf64(void *ptr, size_t *size, char *key, char **crypt, size_t *crypt_size)
 {
 	char		*code;
 	char		*str;
@@ -119,7 +119,7 @@ char			*Elf64(void *ptr, size_t *size, char **crypt, size_t *crypt_size)
 	*crypt_size = program->p_filesz;
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
-	header->e_entry = program->p_vaddr + program->p_filesz;
+	header->e_entry = program->p_vaddr + program->p_filesz + KEY_SIZE;
 
 	printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
 
