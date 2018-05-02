@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/04/27 16:50:39 by droly            ###   ########.fr       */
+/*   Updated: 2018/05/02 16:31:46 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ char			*create_opcode(char *str, Elf64_Word jump, size_t code_size, size_t paddi
 	char	*code;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
-	ft_strncpy(code + KEY_SIZE, str, code_size);
+	ft_strncpy(code, str, code_size);
 	code[code_size] = (char)jump;
 	code[code_size + 1] = (char)(jump >> 8);
 	code[code_size + 2] = (char)(jump >> 16);
@@ -70,7 +70,7 @@ void			update_segment_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
+void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset, size_t *crypt_offset, size_t *crypt_size)
 {
 	Elf64_Shdr	*section;
 	int			i;
@@ -82,6 +82,11 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset)
 		if (section->sh_offset > offset)
 		{
 			section->sh_offset += PAGE_SIZE;
+		}
+		if (ft_strcmp(elf_lookup_string(header, section->sh_name), ".text") == 0)
+		{
+			*crypt_offset = section->sh_offset;
+			*crypt_size = section->sh_size;
 		}
 	}
 }
@@ -110,18 +115,16 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	while (i_p < header->e_phnum)
 	{
 		program = elf_program(header, i_p++);
-		printf("type = %d, flag = %d\noffset = %llu\n", program->p_type, program->p_flags, program->p_offset);
+		//printf("type = %d, flag = %d\noffset = %llu\n", program->p_type, program->p_flags, program->p_offset);
 		if (program->p_type == PT_LOAD && program->p_flags & PF_X)
 			break ;
 	}
 	tmp_size = program->p_offset + program->p_filesz;
-	*crypt_offset = program->p_offset;
-	*crypt_size = program->p_filesz;
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
-	header->e_entry = program->p_vaddr + program->p_filesz + KEY_SIZE;
+	header->e_entry = program->p_vaddr + program->p_filesz;
 
-	printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
+	//printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
 
 	code_size = 67;
 	code = create_opcode("\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
@@ -163,9 +166,9 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	}
 
 	update_segment_64(header, elf_program(header, i_p)->p_offset);
-	update_section_64(header, section->sh_offset);
+	update_section_64(header, section->sh_offset, crypt_offset, crypt_size);
 	header->e_shoff += PAGE_SIZE;
-	printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
+	//printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
 	str = ft_memalloc(*size + PAGE_SIZE);
 	ft_strncpy(str, ptr, tmp_size);
@@ -173,6 +176,14 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	ft_strncpy(str + tmp_size, code, PAGE_SIZE);
 	ft_strncpy(str + tmp_size + PAGE_SIZE, ptr + tmp_size, *size - tmp_size);
 	*size += PAGE_SIZE;
+
+
+
+	i_p = 0;
+	while (i_p < *crypt_size)
+	{
+		str[*crypt_offset + i_p++] = 0x42;
+	}
 	return (str);
 }
 
@@ -180,10 +191,22 @@ void			magic_number(void *ptr, size_t size, char *file_name)
 {
 	char		*str;
 
+	char		*key;
+	size_t		crypt_offset;
+	size_t		crypt_size;
+	int			i;
+
 	str = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && str[EI_CLASS] == ELFCLASS64)
 	{
-		rc4(str, size);
+		str = Elf64(ptr, &size, key, &crypt_offset, &crypt_size);
+		i = 0;
+		while (i < size)
+		{
+			printf("%c", str[i]);
+			i++;
+		}
+		//rc4(str, size);
 	}
 	else
 		printf("Wrong file signature\n");
