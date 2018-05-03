@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/04/27 16:50:37 by droly            ###   ########.fr       */
+/*   Updated: 2018/05/03 11:52:33 by droly            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,16 +27,16 @@ void	exitstr(char *str)
 		    échanger(S[i], S[j])
 	finpour*/
 
-void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_file, char *str)
+void	rumble_bits(char *key, char *ptr, int tab[256], int tab_rest[256], size_t size, size_t size_file, char *str, size_t rest_size)
 {
 	char tmp;
 	int i;
 	int j;
 	int p;
 
-	i = 0;
+
 //encrypt :
-	while (i < size)
+	while (i < size && size > 256)
 	{
 		j = 0;
 		while (j < 256 && i  < size)
@@ -51,12 +51,39 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_fi
 			i++;
 		}
 	}
+	while (i < rest_size)
+	{
+		j = 0;
+		while (j < rest_size)
+		{
+//			printf("mdr : size : %lu, tab[j]: %d, i : %d, j : %d\n", size, tab[j], i , j);
+			tmp = ptr[(tab_rest[j]) + i - j];
+//			printf("mdr2\n");
+			ptr[(tab_rest[j]) + i - j] = ptr[i];
+//			printf("mdr3\n");
+			ptr[i] = tmp;
+			j++;
+			i++;
+		}
+	}
 	printf("\n___________________________________________________________________________________________\n\n");
 	i = 0;
-	while (i < size)
+	while (i < size && size > 256)
 	{
 		j = 0;
 		while (j < 256 && i < size)
+		{
+//			printf("compare : %c ^ %c", ptr[i], key[j]);
+			ptr[i] = ptr[i] ^ key[j];
+//			printf(" = %c\n", ptr[i]);
+			i++;
+			j++;
+		}
+	}
+	while (i < rest_size)
+	{
+		j = 0;
+		while (j < rest_size)
 		{
 //			printf("compare : %c ^ %c", ptr[i], key[j]);
 			ptr[i] = ptr[i] ^ key[j];
@@ -74,7 +101,7 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_fi
 	printf("\n___________________________________________________________________________________________\n\n");
 // reverse encrypt 
 	i = 0;
-	while (i < size)
+	while (i < size && size > 256)
 	{
 		j = 0;
 		while (j < 256 && i < size)
@@ -86,8 +113,33 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_fi
 			j++;
 		}
 	}
+	while (i < rest_size)
+	{
+		j = 0;
+		while (j < rest_size)
+		{
+//			printf("compare : %c ^ %c", ptr[i], key[j]);
+			ptr[i] = ptr[i] ^ key[j];
+//			printf(" = %c\n", ptr[i]);
+			i++;
+			j++;
+		}
+	}
+	i = rest_size + size - 1;
+	while (i >= size)
+	{
+		j = rest_size - 1;
+		while (j >= 0 && i >= 0)
+		{
+			tmp = ptr[(tab_rest[j]) + i - j];
+			ptr[(tab_rest[j]) + i - j] = ptr[i];
+			ptr[i] = tmp;
+			j--;
+			i--;
+		}
+	}
 	i = size - 1;
-	while (i >= 0)
+	while (i >= 0 && size > 256)
 	{
 		j = 255;
 		while (j >= 0 && i >= 0)
@@ -107,24 +159,31 @@ void	rumble_bits(char *key, char *ptr, int tab[256], size_t size, size_t size_fi
 	}
 }
 
-void	key_schedule(char *key, void *ptr, size_t size, size_t size_file, void *str)
+void	key_schedule(char *key, void *ptr, size_t size, size_t size_file, void *str, size_t rest_size)
 {
 	int i;
 	int j;
 	int tab[256];
+	int tab_rest[256];
 	int tmp;
 
 	i = 0;
 	j = 0;
-	while (i < 256)
+	while (i < 256 && size > 256)
 	{
 		tab[i] = i;
 		i++;
 	}
 	i = 0;
-	while (i < 256)
+	while (i < rest_size)
 	{
-		j = (j + tab[i] + key[i % 50]) % 256;
+		tab_rest[i] = i;
+		i++;
+	}
+	i = 0;
+	while (i < 256 && size > 256)
+	{
+		j = (j + tab[i] + key[i % 256]) % 256;
 		tmp = tab[j];
 		tab[j] = tab[i];
 		tab[i] = tmp;
@@ -132,19 +191,29 @@ void	key_schedule(char *key, void *ptr, size_t size, size_t size_file, void *str
 	}
 	i = 0;
 	j = 0;
-	while (i < 256)
+	while (i < rest_size)
 	{
-		if (j == tab[i])
+		j = (j + tab_rest[i] + key[i % 256]) % rest_size;
+		tmp = tab_rest[j];
+		tab_rest[j] = tab_rest[i];
+		tab_rest[i] = tmp;
+		i++;
+	}
+	i = 0;
+	j = 0;
+	while (i < rest_size)
+	{
+		if (j == tab_rest[i])
 		{
-//			printf("tab[%d] : %d\n", i, tab[i]);
+			printf("tab[%d] : %d\n", i, tab_rest[i]);
 			j++;
 			i = -1;
 		}
 		i++;
-//		if ( i == 256 && j != 256)
-//			i = 0;
+		if ( i == 256 && j != 256)
+			i = 0;
 	}
-	rumble_bits(key, ptr, tab, size, size_file, str);
+	rumble_bits(key, ptr, tab, tab_rest,  size, size_file, str, rest_size);
 }
 
 
@@ -153,7 +222,7 @@ char	*create_key(char *str, size_t size_file)
 	int				fd;
 	int				i;
 	ssize_t			size_key;
-	size_t			global_size;
+	size_t			rest_size;
 	size_t			crypt_size;
 	size_t			crypt_offset;
 	unsigned char	ptr[256];
@@ -174,10 +243,12 @@ char	*create_key(char *str, size_t size_file)
 		i++;
 	}
 	str = Elf64(str, &size_file, key, &crypt_offset, &crypt_size);
+	printf("size crypt off : %lu\n", crypt_offset);
 	crypt = str + crypt_offset;
 	printf("str = %p, crypt = %p\n", str, crypt);
-	global_size = (crypt_size % 256 == 0) ? crypt_size : (crypt_size / 256 + 1) * 256;
-	tmp2 = malloc(global_size);
+	rest_size = crypt_size % 256;
+	crypt_size -= rest_size;
+//	tmp2 = malloc(global_size);
 /*	i = 0;
 	while (i < size_file)
 	{
@@ -190,7 +261,7 @@ char	*create_key(char *str, size_t size_file)
 		i++;
 	}*/
 	ft_putchar('\n');
-	key_schedule(key, crypt, global_size, size_file, str);
+	key_schedule(key, crypt, crypt_size, size_file, str, rest_size);
 	return (key);
 }
 
