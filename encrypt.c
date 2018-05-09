@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/05/08 11:01:39 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/09 16:11:54 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,47 +169,44 @@ void	rumble_bits(char *key, char *ptr, int tab[256], int tab_rest[256], size_t s
 	}
 }
 
-void	key_schedule(char *key, void *ptr, size_t size, size_t size_file, void *str, size_t rest_size)
+void	key_schedule(char *key, size_t size, size_t rest_size, int **tab, int **tab_rest)
 {
 	int i;
 	int j;
-	int tab[256];
-	int tab_rest[256];
 	int tmp;
 
 	i = 0;
 	j = 0;
 	while (i < 256 && size >= 256)
 	{
-		tab[i] = i;
+		(*tab)[i] = i;
 		i++;
 	}
 	i = 0;
 	while (i < rest_size)
 	{
-		tab_rest[i] = i;
+		(*tab_rest)[i] = i;
 		i++;
 	}
 	i = 0;
 	while (i < 256 && size >= 256)
 	{
-		j = (j + tab[i] + key[i % 256]) % 256;
-		tmp = tab[j];
-		tab[j] = tab[i];
-		tab[i] = tmp;
+		j = (j + (*tab)[i] + key[i % 256]) % 256;
+		tmp = (*tab)[j];
+		(*tab)[j] = (*tab)[i];
+		(*tab)[i] = tmp;
 		i++;
 	}
 	i = 0;
 	j = 0;
 	while (i < rest_size)
 	{
-		j = (j + tab_rest[i] + key[i % 256]) % rest_size;
-		tmp = tab_rest[j];
-		tab_rest[j] = tab_rest[i];
-		tab_rest[i] = tmp;
+		j = (j + (*tab_rest)[i] + key[i % 256]) % rest_size;
+		tmp = (*tab_rest)[j];
+		(*tab_rest)[j] = (*tab_rest)[i];
+		(*tab_rest)[i] = tmp;
 		i++;
 	}
-	rumble_bits(key, ptr, tab, tab_rest,  size, size_file, str, rest_size);
 }
 
 
@@ -217,8 +214,9 @@ char	*create_key(char *str, size_t size_file)
 {
 	int				fd;
 	int				i;
+	int				*tab;
+	int				*tab_rest;
 	ssize_t			size_key;
-	size_t			rest_size;
 	size_t			crypt_size;
 	size_t			crypt_offset;
 	unsigned char	ptr[256];
@@ -228,7 +226,7 @@ char	*create_key(char *str, size_t size_file)
 
 	key = ft_memalloc(sizeof(char) * 256);
 	if ((fd = open("/dev/random", O_RDONLY)) < 0)
-		exitstr("/dev/random dont open\n");
+		exitstr("/dev/random doesn't open\n");
 	size_key = read(fd, ptr, sizeof(ptr));
 	i = 0;
 	//printf("Key : ");
@@ -239,8 +237,10 @@ char	*create_key(char *str, size_t size_file)
 		i++;
 	}
 	//printf("\n");
-	str = Elf64(str, &size_file, key, &crypt_offset, &crypt_size);
-	tmp2 = malloc(size_file);
+	tab = ft_memalloc(sizeof(int) * 256);
+	tab_rest = ft_memalloc(sizeof(int) * 256);
+	str = Elf64(str, &size_file, key, &crypt_offset, &crypt_size, &tab, &tab_rest);
+	tmp2 = ft_memalloc(size_file);
 	i = 0;
 	while (i < size_file)
 	{
@@ -248,9 +248,7 @@ char	*create_key(char *str, size_t size_file)
 		i++;
 	}
 	crypt = tmp2 + crypt_offset;
-	rest_size = crypt_size % 256;
-	crypt_size -= rest_size;
-	key_schedule(key, crypt, crypt_size, size_file, tmp2, rest_size);
+	rumble_bits(key, crypt, tab, tab_rest, (crypt_size - crypt_size % 256), size_file, tmp2, (crypt_size % 256));
 	return (key);
 }
 

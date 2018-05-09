@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/05/08 12:45:36 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/09 15:54:47 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,7 @@ void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset, size_t *crypt_off
 	}
 }
 
-char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *crypt_size)
+char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *crypt_size, int **tab, int **tab_rest)
 {
 	char		*code;
 	char		*str;
@@ -263,7 +263,10 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	update_section_64(header, section->sh_offset, crypt_offset, crypt_size);
 	header->e_shoff += PAGE_SIZE;
 	//printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
-	//
+
+	//Create rumble_bits index table
+	key_schedule(key, (*crypt_size - *crypt_size % 256), (*crypt_size % 256), tab, tab_rest);
+
 	code_size = 46 + (24 + 64 * 5) + 55 + 14;
 	code = create_opcode(key, *crypt_size, (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff, code_size - 5, PAGE_SIZE);
 
@@ -273,9 +276,6 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	ft_strncpy(str + tmp_size, code, PAGE_SIZE);
 	ft_strncpy(str + tmp_size + PAGE_SIZE, ptr + tmp_size, *size - tmp_size);
 	*size += PAGE_SIZE;
-
-
-
 	return (str);
 }
 
