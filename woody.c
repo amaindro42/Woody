@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/05/09 15:54:47 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/29 14:16:20 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,8 @@ char			*elf_lookup_string(Elf64_Ehdr *header, int offset) {
 	return strtab + offset;
 }
 
-char			*create_opcode(char *key, size_t size_file, Elf64_Word jump, size_t code_size, size_t padding)
+char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, Elf64_Addr text_addr,
+		size_t crypt_size, size_t code_size, size_t padding, int *tab, int *tab_rest)
 {
 	char	*code;
 	char	base_code[] = "\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
@@ -58,110 +59,80 @@ char			*create_opcode(char *key, size_t size_file, Elf64_Word jump, size_t code_
 	/* 47*/				"\x58" // pop rax
 	/* 48*/				"\x58" // pop rax
 	/* 49*/				"\x58" // pop rax
-	/* 50*/				"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x68\x42\x42\x42\x42" // push placeholder for encryption key
-						"\x48\x89\xe6" //mov rsi, rsp
-						"\x48\xc7\xc0\x10\x04\x40\x00" //store entrypoint in rax
+	/* 50*/				"\x48\xc7\xc6\x00\x00\x00\x00" //mov rsi, 0 <- placeholder
+						"\x48\xc7\xc0\x00\x00\x00\x00" //mov rax, 0 <- placeholder
 						"\x48\x33\xc9" //xor rcx, rcx
-						"\x48\xc7\xc2\x00\x02\x00\x00" //mov rdx, 512
-						//loop
+						"\x48\xc7\xc2\x00\x01\x00\x00" //mov rdx, 256
+						//loop xor
 	/* 01*/				"\x90"
 	/* 04*/				"\x48\x8b\x1e" //mov rbx, ptr[rsi]
 	/* 06*/				"\x31\x18" //xor WORD ptr[rax], ebx
 	/* 13*/				"\x48\x81\xc0\x04\x00\x00\x00" //add rax, 4
-	/* 20*/				"\x48\x81\xc6\x08\x00\x00\x00" //add rsi, 8
-	/* 27*/				"\x48\x81\xc1\x08\x00\x00\x00" //add rcx, 8
+	/* 20*/				"\x48\x81\xc6\x04\x00\x00\x00" //add rsi, 4
+	/* 27*/				"\x48\x81\xc1\x04\x00\x00\x00" //add rcx, 4
 	/* 30*/				"\x48\x39\xd1" //cmp rsi, rdx
-	/* 32*/				"\x7c\x0e" //jmp 14
-	/* 39*/				"\x48\x81\xc2\x00\x02\x00\x00" //add rdx, 512
-	/* 46*/				"\x48\x81\xee\x00\x02\x00\x00" //sub rdi, 512
+	/* 32*/				"\x7c\x0e" //jl 14
+	/* 39*/				"\x48\x81\xc2\x00\x01\x00\x00" //add rdx, 256
+	/* 46*/				"\x48\x81\xee\x00\x01\x00\x00" //sub rsi, 256
 
-	/* 53*/				"\x48\x81\xf9\x00\x00\x00\x00" //cmp rcx, 0
-	/* 55*/				"\x7c\xc9" //jmp -55
+	/* 53*/				"\x48\x81\xf9\x00\x00\x00\x00" //cmp rcx, 0 <- placeholder
+	/* 55*/				"\x7c\xc9" //jl -55
+						//loop rumble bits
+	/* 07*/				"\x48\xc7\xc6\x00\x00\x00\x00" //mov rsi, 0 <- placeholder
+						//mov rdi, rax - (crypt_size % 256)
+	/* 10*/				"\x48\x89\xc7" //mov rdi, rax
+	/* 17*/				"\x48\x81\xef\x00\x00\x00\x00" //sub rdi, 0 <- placeholder
+
+	/* 18*/				"\x90"
+	/* 25*/				"\x48\x81\xe8\x01\x00\x00\x00" //sub rax, 1
+	/* 28*/				"\x48\x31\xdb" //xor rbx, rbx
+	/* 30*/				"\x8a\x1e" //mov rbx, BYTE ptr[rsi] <- get position
+	/* 33*/				"\x48\x31\xd2" //xor rdx, rdx
+	/* 35*/				"\x8a\x10" //mov rdx, BYTE ptr[rax] <- store [rax] in tmp
+	/* 38*/				"\x48\x01\xfb" //add rbx, rdi
+	/* 40*/				"\x8b\x0b" //mov rcx, ptr[rbx]
+	/* 42*/				"\x88\x08" //mov BYTE ptr[rax], rcx
+	/* 44*/				"\x88\x13" //mov BYTE ptr[rbx], rdx
+	/* 51*/				"\x48\x81\xc6\x01\x00\x00\x00" //add rsi, 1
+	/* 54*/				"\x48\x39\xf8" //cmp rax, rdi
+	/* 56*/				"\x7f\xd9" //jg -53
+
 						//clean up
 	/* 03*/				"\x48\x33\xf6" //xor rsi, rsi
 	/* 06*/				"\x48\x33\xff" //xor rdi, rdi
-						"\x48\x31\xc0"; //xor rax, rax
+	/* 09*/				"\x48\x31\xc0" //xor rax, rax
+	/* 12*/				"\x48\x31\xc9" //xor rcx, rcx
+	/* 15*/				"\x48\x31\xd2" //xor rdx, rdx
+	/* 18*/				"\x48\x31\xdb"; //xor rbx, rbx
 	int		i;
 	int		j;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
 	ft_strncpy(code, base_code, code_size);
-	i = 1;
+
+	*(int *)(code + 50 + 3) = entrypoint + code_size + 5; //set key address
+	*(int *)(code + code_size - 18 - 53) = entrypoint + code_size + 5 + 256; //set rumble tab address
+	*(int *)(code + code_size - 18 - 43) = crypt_size % 256; //set tab_rest begin
+	*(int *)(code + 57 + 3) = text_addr; //set .text section address
+
 	j = 0;
-	while (i <= 64) //push of key in stack
+	while (j < 256) //set key at the end of opcode
 	{
-		*(int*)(code + 50 + i + j) = *(int*)(key - j + 252);
+		*(int*)(code + code_size + 5 + j) = *(int*)(key + j);
 		j += 4;
-		i++;
 	}
 
-	*(int*)(code + code_size - 15) = size_file * 2;
+	j = 1;
+	while (j <= crypt_size % 256) //set rumble tab at the end of opcode
+	{
+		*(char*)(code + code_size + 5 + 256 + (j - 1)) = tab_rest[(crypt_size % 256) - j];
+		j++;
+	}
+
+	*(int*)(code + code_size - 24 - 56) = crypt_size; //set cmp for xor loop
 
 	code[code_size] = '\xe9'; //jump to main
-	*(int*)(code + code_size + 1) = jump;
+	*(int*)(code + code_size + 1) = (entrypoint - tmp_entry + code_size + 4) ^ 0xffffffff;
 	return (code);
 }
 
@@ -181,25 +152,29 @@ void			update_segment_64(Elf64_Ehdr *header, Elf64_Off offset)
 	}
 }
 
-void			update_section_64(Elf64_Ehdr *header, Elf64_Off offset, size_t *crypt_offset, size_t *crypt_size)
+Elf64_Addr		update_section_64(Elf64_Ehdr *header, Elf64_Off offset, size_t *crypt_offset, size_t *crypt_size)
 {
 	Elf64_Shdr	*section;
+	Elf64_Addr	ptr;
 	int			i;
 
 	i = 0;
+	ptr = 0;
 	while (i < header->e_shnum)
 	{
 		section = elf_section(header, i++);
-		if (section->sh_offset > offset)
-		{
-			section->sh_offset += PAGE_SIZE;
-		}
 		if (ft_strcmp(elf_lookup_string(header, section->sh_name), ".text") == 0)
 		{
 			*crypt_offset = section->sh_offset;
 			*crypt_size = section->sh_size;
+			ptr = section->sh_addr;
+		}
+		if (section->sh_offset > offset)
+		{
+			section->sh_offset += PAGE_SIZE;
 		}
 	}
+	return (ptr);
 }
 
 char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *crypt_size, int **tab, int **tab_rest)
@@ -215,6 +190,7 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	Elf64_Phdr	*program;
 	Elf64_Shdr	*section;
 	Elf64_Addr	tmp_entry;
+	Elf64_Addr	text_addr;
 
 	header = ptr;
 
@@ -260,15 +236,15 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	}
 
 	update_segment_64(header, elf_program(header, i_p)->p_offset);
-	update_section_64(header, section->sh_offset, crypt_offset, crypt_size);
+	text_addr = update_section_64(header, section->sh_offset, crypt_offset, crypt_size);
 	header->e_shoff += PAGE_SIZE;
 	//printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
 	//Create rumble_bits index table
 	key_schedule(key, (*crypt_size - *crypt_size % 256), (*crypt_size % 256), tab, tab_rest);
 
-	code_size = 46 + (24 + 64 * 5) + 55 + 14;
-	code = create_opcode(key, *crypt_size, (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff, code_size - 5, PAGE_SIZE);
+	code_size = 46 + 28 + 55 + 56 + 23;
+	code = create_opcode(header->e_entry, tmp_entry, key, text_addr, *crypt_size, code_size - 5, PAGE_SIZE, *tab, *tab_rest);
 
 	str = ft_memalloc(*size + PAGE_SIZE);
 	ft_strncpy(str, ptr, tmp_size);
