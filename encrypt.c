@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/20 10:20:34 by droly             #+#    #+#             */
-/*   Updated: 2018/05/29 11:26:02 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/30 15:12:40 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ void	rumble_bits(char *key, char *ptr, int tab[256], int tab_rest[256], size_t s
 		j = 0;
 		while (j < 256 && i  < size)
 		{
-			/*
 //			printf("mdr : size : %lu, tab[j]: %d, i : %d, j : %d\n", size, tab[j], i , j);
 //			printf("lol\n");
 //			printf("tmp : >%c<\n", ptr[0]);
@@ -56,7 +55,7 @@ void	rumble_bits(char *key, char *ptr, int tab[256], int tab_rest[256], size_t s
 //			printf("mdr2\n");
 			ptr[(tab[j]) + i - j] = ptr[i];
 //			printf("mdr3\n");
-			ptr[i] = tmp;*/
+			ptr[i] = tmp;
 			j++;
 			i++;
 		}

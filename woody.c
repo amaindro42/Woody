@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/05/29 14:16:20 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/30 16:02:24 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 	/* 30*/				"\x48\xc7\xc0\x01\x00\x00\x00" //mov rax, 1
 	/* 37*/				"\x48\xc7\xc2\x1c\x00\x00\x00" //mov rdx, 14
 	/* 44*/				"\x0f\x05" //Syscall
-						//decryption
+
+//decryption
 	/* 46*/				"\x58" // pop rax
 	/* 47*/				"\x58" // pop rax
 	/* 48*/				"\x58" // pop rax
@@ -63,7 +64,8 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 						"\x48\xc7\xc0\x00\x00\x00\x00" //mov rax, 0 <- placeholder
 						"\x48\x33\xc9" //xor rcx, rcx
 						"\x48\xc7\xc2\x00\x01\x00\x00" //mov rdx, 256
-						//loop xor
+
+//loop xor
 	/* 01*/				"\x90"
 	/* 04*/				"\x48\x8b\x1e" //mov rbx, ptr[rsi]
 	/* 06*/				"\x31\x18" //xor WORD ptr[rax], ebx
@@ -77,11 +79,12 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 
 	/* 53*/				"\x48\x81\xf9\x00\x00\x00\x00" //cmp rcx, 0 <- placeholder
 	/* 55*/				"\x7c\xc9" //jl -55
-						//loop rumble bits
-	/* 07*/				"\x48\xc7\xc6\x00\x00\x00\x00" //mov rsi, 0 <- placeholder
+
+//loop rumble bits rest
+	/* 07*/				"\x48\xc7\xc6\x00\x00\x00\x00" //mov rsi, 0 <- placeholder (rumble tab address)
 						//mov rdi, rax - (crypt_size % 256)
 	/* 10*/				"\x48\x89\xc7" //mov rdi, rax
-	/* 17*/				"\x48\x81\xef\x00\x00\x00\x00" //sub rdi, 0 <- placeholder
+	/* 17*/				"\x48\x81\xef\x00\x00\x00\x00" //sub rdi, 0 <- placeholder (end condition)
 
 	/* 18*/				"\x90"
 	/* 25*/				"\x48\x81\xe8\x01\x00\x00\x00" //sub rax, 1
@@ -95,9 +98,38 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 	/* 44*/				"\x88\x13" //mov BYTE ptr[rbx], rdx
 	/* 51*/				"\x48\x81\xc6\x01\x00\x00\x00" //add rsi, 1
 	/* 54*/				"\x48\x39\xf8" //cmp rax, rdi
-	/* 56*/				"\x7f\xd9" //jg -53
+	/* 56*/				"\x7f\xd9" //jg -39
 
-						//clean up
+//loop rumble bits
+	/* 07*/				"\x48\xc7\xc6\x00\x00\x00\x00" //mov rsi, 0 <- placeholder (rumble tab address)
+	/* 10*/				"\x49\x89\xf9" //mov r9, rdi
+	/* 17*/				"\x49\x81\xe9\x00\x00\x00\x00" //sub r9, 0 <- placeholder (end condition)
+	/* 24*/				"\x48\x81\xef\x00\x01\x00\x00" //sub rdi, 256
+	/* 31*/				"\x49\xc7\xc0\x00\x00\x00\x00" //mov r8, 0
+
+	/* 32*/				"\x90"
+	/* 58*/				"\x48\x81\xe8\x01\x00\x00\x00" //sub rax, 1
+	/* 35*/				"\x48\x31\xdb" //xor rbx, rbx
+	/* 37*/				"\x8a\x1e" //mov rbx, BYTE ptr[rsi] <- get position
+	/* 40*/				"\x48\x31\xd2" //xor rdx, rdx
+	/* 42*/				"\x8a\x10" //mov rdx, BYTE ptr[rax] <- store [rax] in tmp
+	/* 45*/				"\x48\x01\xfb" //add rbx, rdi
+	/* 47*/				"\x8b\x0b" //mov rcx, ptr[rbx]
+	/* 49*/				"\x88\x08" //mov BYTE ptr[rax], rcx
+	/* 51*/				"\x88\x13" //mov BYTE ptr[rbx], rdx
+	/* 65*/				"\x48\x81\xc6\x01\x00\x00\x00" //add rsi, 1
+	/* 69*/				"\x49\x83\xc0\x01" //add r8, 1
+
+	/* 76*/				"\x49\x81\xf8\x00\x01\x00\x00"
+	/* 78*/				"\x7c\x15" //jl 21
+	/* 85*/				"\x48\x81\xee\x00\x01\x00\x00" //sub rsi, 256
+	/* 92*/				"\x49\xc7\xc0\x00\x00\x00\x00" //mov r8, 0
+	/* 99*/				"\x48\x81\xef\x00\x01\x00\x00" //sub rdi, 256
+
+	/*102*/				"\x4c\x39\xc8" //cmp rax, r9
+	/*104*/				"\x7f\xb7" //jg -73
+
+//clean up
 	/* 03*/				"\x48\x33\xf6" //xor rsi, rsi
 	/* 06*/				"\x48\x33\xff" //xor rdi, rdi
 	/* 09*/				"\x48\x31\xc0" //xor rax, rax
@@ -111,8 +143,13 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 	ft_strncpy(code, base_code, code_size);
 
 	*(int *)(code + 50 + 3) = entrypoint + code_size + 5; //set key address
-	*(int *)(code + code_size - 18 - 53) = entrypoint + code_size + 5 + 256; //set rumble tab address
-	*(int *)(code + code_size - 18 - 43) = crypt_size % 256; //set tab_rest begin
+
+	*(int *)(code + code_size - 18 - 53 - 104) = entrypoint + code_size + 5 + 256; //set rumble tab_rest address
+	*(int *)(code + code_size - 18 - 43 - 104) = crypt_size % 256; //set tab_rest begin
+
+	*(int *)(code + code_size - 18 - 101) = entrypoint + code_size + 5 + 256 + (crypt_size % 256); //set rumble tab address
+	*(int *)(code + code_size - 18 - 91) = crypt_size - (crypt_size % 256); //set tab begin
+
 	*(int *)(code + 57 + 3) = text_addr; //set .text section address
 
 	j = 0;
@@ -129,7 +166,14 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 		j++;
 	}
 
-	*(int*)(code + code_size - 24 - 56) = crypt_size; //set cmp for xor loop
+	j = 1;
+	while (j <= 256) //set rumble tab at the end of opcode
+	{
+		*(char*)(code + code_size + 5 + 256 + (crypt_size % 256) + (j - 1)) = tab[256 - j];
+		j++;
+	}
+
+	*(int*)(code + code_size - 24 - 56 - 104) = crypt_size; //set cmp for xor loop
 
 	code[code_size] = '\xe9'; //jump to main
 	*(int*)(code + code_size + 1) = (entrypoint - tmp_entry + code_size + 4) ^ 0xffffffff;
@@ -217,9 +261,9 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	program->p_flags = program->p_flags | PF_W;
 
 	//Increase p_filesz by account for the new code (parasite)
-	program->p_filesz += code_size;
+	program->p_filesz += PAGE_SIZE;
 	//Increase p_memsz to account for the new code (parasite)
-	program->p_memsz += code_size;
+	program->p_memsz += PAGE_SIZE;
 
 	//For the last shdr in the text segment
 	i_s = 0;
@@ -229,7 +273,7 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 		if (elf_section(header, i_s + 1)->sh_addr > header->e_entry)
 		{
 	//increase sh_len by the parasite length
-			section->sh_size += code_size;
+			section->sh_size += PAGE_SIZE;
 			break ;
 		}
 		i_s++;
@@ -243,7 +287,7 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	//Create rumble_bits index table
 	key_schedule(key, (*crypt_size - *crypt_size % 256), (*crypt_size % 256), tab, tab_rest);
 
-	code_size = 46 + 28 + 55 + 56 + 23;
+	code_size = 46 + 28 + 55 + 56 + 104 + 23;
 	code = create_opcode(header->e_entry, tmp_entry, key, text_addr, *crypt_size, code_size - 5, PAGE_SIZE, *tab, *tab_rest);
 
 	str = ft_memalloc(*size + PAGE_SIZE);
