@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/05/30 16:02:24 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/31 15:27:56 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ char			*elf_lookup_string(Elf64_Ehdr *header, int offset) {
 }
 
 char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, Elf64_Addr text_addr,
-		size_t crypt_size, size_t code_size, size_t padding, int *tab, int *tab_rest)
+		size_t crypt_size, size_t code_size, int *tab, int *tab_rest)
 {
 	char	*code;
 	char	base_code[] = "\x68\x2e\x0a\x00\x00" //push "....WOODY....\n"
@@ -136,8 +136,7 @@ char			*create_opcode(Elf64_Addr entrypoint, Elf64_Addr tmp_entry, char *key, El
 	/* 12*/				"\x48\x31\xc9" //xor rcx, rcx
 	/* 15*/				"\x48\x31\xd2" //xor rdx, rdx
 	/* 18*/				"\x48\x31\xdb"; //xor rbx, rbx
-	int		i;
-	int		j;
+	unsigned int		j;
 
 	code = ft_memalloc(sizeof(char) * PAGE_SIZE);
 	ft_strncpy(code, base_code, code_size);
@@ -229,7 +228,6 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	int			i_s;
 	size_t		code_size;
 	size_t		tmp_size;
-	size_t		padding_size;
 	Elf64_Ehdr	*header;
 	Elf64_Phdr	*program;
 	Elf64_Shdr	*section;
@@ -288,7 +286,7 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	key_schedule(key, (*crypt_size - *crypt_size % 256), (*crypt_size % 256), tab, tab_rest);
 
 	code_size = 46 + 28 + 55 + 56 + 104 + 23;
-	code = create_opcode(header->e_entry, tmp_entry, key, text_addr, *crypt_size, code_size - 5, PAGE_SIZE, *tab, *tab_rest);
+	code = create_opcode(header->e_entry, tmp_entry, key, text_addr, *crypt_size, code_size - 5, *tab, *tab_rest);
 
 	str = ft_memalloc(*size + PAGE_SIZE);
 	ft_strncpy(str, ptr, tmp_size);
@@ -299,25 +297,13 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	return (str);
 }
 
-void			magic_number(void *ptr, size_t size, char *file_name)
+void			magic_number(void *ptr, size_t size)
 {
 	char		*str;
-
-	char		*key;
-	size_t		crypt_offset;
-	size_t		crypt_size;
-	int			i;
 
 	str = ptr;
 	if (*(int *)ptr == *(int *)ELFMAG && str[EI_CLASS] == ELFCLASS64)
 	{
-		/*str = Elf64(ptr, &size, key, &crypt_offset, &crypt_size);
-		i = 0;
-		while (i < size)
-		{
-			printf("%c", str[i]);
-			i++;
-		}*/
 		rc4(str, size);
 	}
 	else
@@ -341,7 +327,7 @@ int				main(int ac, char **av)
 		return (0);
 	if (close(fd) < 0)
 		return (0);
-	magic_number(ptr, size, av[1]);
+	magic_number(ptr, size);
 	if (munmap(ptr, size) < 0)
 		return (0);
 }
