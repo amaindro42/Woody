@@ -6,7 +6,7 @@
 /*   By: droly <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/04/12 11:28:09 by droly             #+#    #+#             */
-/*   Updated: 2018/05/31 15:27:56 by amaindro         ###   ########.fr       */
+/*   Updated: 2018/05/31 16:01:51 by amaindro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,7 +244,6 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	while (i_p < header->e_phnum)
 	{
 		program = elf_program(header, i_p++);
-		//printf("type = %d, flag = %d\noffset = %llu\n", program->p_type, program->p_flags, program->p_offset);
 		if (program->p_type == PT_LOAD && program->p_flags & PF_X)
 			break ;
 	}
@@ -252,8 +251,6 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 
 	//Modify the entry point of the ELF header to point to the new code (p_vaddr + p_filesz)
 	header->e_entry = program->p_vaddr + program->p_filesz;
-
-	//printf("jump = %llx\n", (header->e_entry - tmp_entry + code_size - 1) ^ 0xffffffff);
 
 	//change text segment access rights to be able to decrypt it later
 	program->p_flags = program->p_flags | PF_W;
@@ -280,7 +277,6 @@ char			*Elf64(void *ptr, size_t *size, char *key, size_t *crypt_offset, size_t *
 	update_segment_64(header, elf_program(header, i_p)->p_offset);
 	text_addr = update_section_64(header, section->sh_offset, crypt_offset, crypt_size);
 	header->e_shoff += PAGE_SIZE;
-	//printf("p_offset = %llx\nsh_offset = %llx\n", elf_program(header, i_p)->p_offset, section->sh_offset);
 
 	//Create rumble_bits index table
 	key_schedule(key, (*crypt_size - *crypt_size % 256), (*crypt_size % 256), tab, tab_rest);
@@ -307,7 +303,7 @@ void			magic_number(void *ptr, size_t size)
 		rc4(str, size);
 	}
 	else
-		printf("Wrong file signature\n");
+		ft_putstr("Wrong file signature\n");
 }
 
 int				main(int ac, char **av)
